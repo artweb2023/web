@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora&family=Oxygen&family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="static/css/style.css">
+  <title>Travell Blog</title>
+</head>
+
+<body>
+  <header class="header">
+    <span class="header__logo text">Escape.</span>
+    <nav class="nav-bar">
+      <a class="nav-bar__link" href="#">Home</a>
+      <a class="nav-bar__link" href="#">Categories</a>
+      <a class="nav-bar__link" href="#">About</a>
+      <a class="nav-bar__link" href="#">Contact</a>
+    </nav>
+    <h1 class="header__title">Let's do it together.</h1>
+    <p class="header__text">We travel the world in search of stories. Come along for the ride.</p>
+    <button class="header-button-view__posts">View Latest Posts</button>
+  </header>
+  <nav class="menu-bar">
+    <a class="menu-bar__link" href="#">Nature</a>
+    <a class="menu-bar__link" href="#">Photography</a>
+    <a class="menu-bar__link" href="#">Relaxation</a>
+    <a class="menu-bar__link" href="#">Vacation</a>
+    <a class="menu-bar__link" href="#">Travel</a>
+    <a class="menu-bar__link" href="#">Adventure</a>
+  </nav>
+  <main class="main">
+    <section class="main-featured">
+      <h2 class="main-featured__title">Featured Posts</h2>
+      {{ range .FeaturedPost }}
+      <div class="post-box {{ .ImgModifier }}">
+        <span class="post-box__tags {{ .PostTagModifier }}">Adventure</span>
+        <h4 class="post-box__title">{{ .Title }}</h4>
+        <p class="post-box__text">{{ .Subtitle }}</p>
+        <div class="post-box__autor">
+          <img class="avatar" src="{{ .AuthorImg }}" alt="avatar"></img>
+          <span class="post-box__name">{{ .Author }}</span>
+          <span class="post-box__date">{{ .PublishDate }}</span>
+        </div>
+      </div>
+      {{ end }}
+    </section>
+    <section class="main-recent">
+      <h2 class="main-recent__title">Most Recent</h2>
+      {{ range .RecentPost }}
+      <div class="post-card">
+        <img class="post-card__img" src="{{ .PostImg }}" alt="air balloon">
+        <h3 class="post-card__title">{{ .Title }}</h3>
+        <p class="post-card__text">{{ .Subtitle }}</p>
+        <span class="post-card__line"></span>
+        <div class="post-card__autor">
+          <img class="avatar" src="{{ .AuthorImg }}" alt="avatar"></img>
+          <span class="post-card__name">{{ .Author }}</span>
+          <span class="post-card__date">{{ .PublishDate }}</span>
+        </div>
+      </div>
+      {{ end }}
+    </section>
+  </main>
+  <footer class="footer">
+    <h2 class="footer__title">Stay in Touch</h2>
+    <form class="footer-form">
+      <input class="footer-form__input" type="text" name="email" placeholder="Enter your email address" />
+      <button class="footer-form__button" type="submit">Submit</button>
+    </form>
+    <div class="footer-nav">
+      <span class="footer-nav__logo text">Escape.</span>
+      <nav class="footer-navigation">
+        <a class="footer-navigation__link" href="#">Home</a>
+        <a class="footer-navigation__link" href="#">Categories</a>
+        <a class="footer-navigation__link" href="#">About</a>
+        <a class="footer-navigation__link" href="#">Contact</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+
+</html>
