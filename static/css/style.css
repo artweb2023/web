@@ -175,14 +175,6 @@
     margin: 0 0 0 auto;
 }
 
-.show {
-    display: block;
-}
-
-.no-show {
-    display: none;
-}
-
 .post-box__tags {
     top: 20px;
     left: 20px;

@@ -38,7 +38,7 @@
       <h2 class="main-featured__title">Featured Posts</h2>
       {{ range .FeaturedPost }}
       <div class="post-box {{ .ImgModifier }}">
-        <span class="post-box__tags {{ .PostTagModifier }}">Adventure</span>
+        {{if .PostTag }}<span class="post-box__tags">{{ .PostTag }}</span>{{end}}
         <h4 class="post-box__title">{{ .Title }}</h4>
         <p class="post-box__text">{{ .Subtitle }}</p>
         <div class="post-box__autor">
