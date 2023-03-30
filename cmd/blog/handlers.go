@@ -25,20 +25,20 @@ type recentPostData struct {
 	PublishDate string
 }
 
-type PostData struct {
+type indexPage struct {
 	FeaturedPost []featuredPostData
 	RecentPost   []recentPostData
 }
 
 func index(w http.ResponseWriter, r *http.Request) { // Функция для отдачи страницы
-	ts, err := template.ParseFiles("cmd/blog/pages/index.html")
+	ts, err := template.ParseFiles("pages/index.html")
 	if err != nil { // nil пустота переменных
 		http.Error(w, "Internal Server Error", 500) // В случае ошибки парсинга - возвращаем 500
 		log.Println(err.Error())                    // Используем стандартный логгер для вывода ошибки в консоль
 		return                                      // Не забываем завершить выполнение ф-ии
 	}
 
-	data := PostData{
+	data := indexPage{
 		FeaturedPost: featuredPosts(),
 		RecentPost:   recentPost(),
 	}
@@ -54,16 +54,14 @@ func index(w http.ResponseWriter, r *http.Request) { // Функция для о
 }
 
 func post(w http.ResponseWriter, r *http.Request) { // Функция для отдачи страницы
-	ts, err := template.ParseFiles("cmd/blog/pages/post.html") // Главная страница блога  ts переменная куда парситься шаблон
-	if err != nil {                                            // nil пустота переменных
+	ts, err := template.ParseFiles("pages/post.html") // Главная страница блога  ts переменная куда парситься шаблон
+	if err != nil {                                   // nil пустота переменных
 		http.Error(w, "Internal Server Error", 500) // В случае ошибки парсинга - возвращаем 500
 		log.Println(err.Error())                    // Используем стандартный логгер для вывода ошибки в консоль
 		return                                      // Не забываем завершить выполнение ф-ии
 	}
 
-	data := PostData{}
-
-	err = ts.Execute(w, data) // Запускаем шаблонизатор для вывода шаблона в тело ответа
+	err = ts.Execute(w, nil) // Запускаем шаблонизатор для вывода шаблона в тело ответа
 	if err != nil {
 		http.Error(w, "Internal Server Error", 500)
 		log.Println(err.Error())
@@ -125,7 +123,7 @@ func recentPost() []recentPostData {
 		{
 			Title:       "Through the Mist",
 			Subtitle:    "Travel makes you see what a tiny place you occupy in the world.",
-			PostImg:     "static/img/seawave.png",
+			PostImg:     "/static/img/sea%E2%80%8Bwave.png",
 			Author:      "William Wong",
 			AuthorImg:   "static/img/william-wong.png",
 			PublishDate: "9/25/2015",
