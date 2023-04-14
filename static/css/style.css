@@ -119,24 +119,19 @@
     background: #DEDEDE;
 }
 
+.post-box_link {
+    display: block;
+    text-decoration: none;
+}
+
 .post-box {
     display: flex;
+    text-decoration: none;
     flex-direction: column;
     position: relative;
     width: 460px;
     height: 280px;
-}
-
-.background_left {
-    background: #000000 url("../img/noth_lite.png") no-repeat;
-    background-size: cover;
-    border-radius: 3px;
-}
-
-.background_rigth {
-    background: #000000 url("../img/balloon.png") no-repeat;
-    background-size: cover;
-    border-radius: 3px;
+    margin-bottom: 25px;
 }
 
 .post-box__title {
@@ -220,6 +215,7 @@
 
 .post-card {
     display: flex;
+    text-decoration: none;
     flex-direction: column;
     max-height: 291px;
     max-width: 296px;

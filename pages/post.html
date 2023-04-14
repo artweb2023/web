@@ -17,22 +17,20 @@
   <header class="header">
     <span class="header__logo text">Escape.</span>
     <nav class="nav-bar">
-      <a class="nav-bar__link" href="#">Home</a>
+      <a class="nav-bar__link" href="./home">Home</a>
       <a class="nav-bar__link" href="#">Categories</a>
       <a class="nav-bar__link" href="#">About</a>
       <a class="nav-bar__link" href="#">Contact</a>
     </nav>
   </header>
   <main class="main">
-    {{ range .PostData }}
     <h1 class="main__title">{{ .Title }}</h1>
     <p class="main__subtext">{{ .Subtitle }}</p>
     <img class="main__image" src="{{ .PostImg }}" alt="northern lights">
     <div class="main-content">
-      {{ range .PostText }}
+      {{ range .Text}}
       <p class="main-content__text">{{ . }}</p>
-      {{ end }}
-      {{ end }}
+      {{ end}}
     </div>
   </main>
   <footer class="footer">

@@ -16,7 +16,7 @@
   <header class="header">
     <span class="header__logo text">Escape.</span>
     <nav class="nav-bar">
-      <a class="nav-bar__link" href="#">Home</a>
+      <a class="nav-bar__link" href="/home">Home</a>
       <a class="nav-bar__link" href="#">Categories</a>
       <a class="nav-bar__link" href="#">About</a>
       <a class="nav-bar__link" href="#">Contact</a>
@@ -37,7 +37,8 @@
     <section class="main-featured">
       <h2 class="main-featured__title">Featured Posts</h2>
       {{ range .FeaturedPost }}
-      <div class="post-box {{ .ImgModifier }}">
+      <a class="post-box" href="./post?id={{ .PostId }}"
+        style="background: #000000 url('{{ .PostImg }}') no-repeat; border-radius: 3px;">
         {{if .PostTag }}<span class="post-box__tags">{{ .PostTag }}</span>{{end}}
         <h4 class="post-box__title">{{ .Title }}</h4>
         <p class="post-box__text">{{ .Subtitle }}</p>
@@ -46,13 +47,13 @@
           <span class="post-box__name">{{ .Author }}</span>
           <span class="post-box__date">{{ .PublishDate }}</span>
         </div>
-      </div>
+      </a>
       {{ end }}
     </section>
     <section class="main-recent">
       <h2 class="main-recent__title">Most Recent</h2>
       {{ range .RecentPost }}
-      <div class="post-card">
+      <a class="post-card" href="./post?id={{ .PostId }}">
         <img class="post-card__img" src="{{ .PostImg }}" alt="air balloon">
         <h3 class="post-card__title">{{ .Title }}</h3>
         <p class="post-card__text">{{ .Subtitle }}</p>
@@ -62,7 +63,7 @@
           <span class="post-card__name">{{ .Author }}</span>
           <span class="post-card__date">{{ .PublishDate }}</span>
         </div>
-      </div>
+      </a>
       {{ end }}
     </section>
   </main>
