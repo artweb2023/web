@@ -37,7 +37,7 @@
     <section class="main-featured">
       <h2 class="main-featured__title">Featured Posts</h2>
       {{ range .FeaturedPost }}
-      <a class="post-box" href="./post?id={{ .PostId }}"
+      <a class="post-box" href="./post/{{ .PostId }}"
         style="background: #000000 url('{{ .PostImg }}') no-repeat; border-radius: 3px;">
         {{if .PostTag }}<span class="post-box__tags">{{ .PostTag }}</span>{{end}}
         <h4 class="post-box__title">{{ .Title }}</h4>
@@ -53,7 +53,7 @@
     <section class="main-recent">
       <h2 class="main-recent__title">Most Recent</h2>
       {{ range .RecentPost }}
-      <a class="post-card" href="./post?id={{ .PostId }}">
+      <a class="post-card" href="./post/{{ .PostId }}">
         <img class="post-card__img" src="{{ .PostImg }}" alt="air balloon">
         <h3 class="post-card__title">{{ .Title }}</h3>
         <p class="post-card__text">{{ .Subtitle }}</p>

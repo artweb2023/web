@@ -1,11 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -84,13 +87,23 @@ func index(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 
 func post(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		post_id := r.URL.Query().Get("id") // Получаем значение параметра id из URL
-		if post_id == "" {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+		postIdStr := mux.Vars(r)["postID"]     // Получаем значение параметра id из URL
+		postId, err := strconv.Atoi(postIdStr) // Конвертируем строку orderID в число
+		if err != nil {
+			if err == sql.ErrNoRows {
+				// sql.ErrNoRows возвращается, когда в запросе к базе не было ничего найдено
+				// В таком случае мы возвращем 404 (not found) и пишем в тело, что ордер не найден
+				http.Error(w, "Post not found", 404)
+				log.Println(err)
+				return
+			}
+
+			http.Error(w, "Internal Server Error", 500)
+			log.Println(err)
 			return
 		}
 
-		postdata, err := Posts(db, post_id)
+		postdata, err := Posts(db, postId)
 		if err != nil {
 			http.Error(w, "Internal Server Error", 500) // В случае ошибки парсинга - возвращаем 500
 			log.Println(err)
@@ -116,7 +129,7 @@ func post(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Posts(db *sqlx.DB, post_id string) (postPageData, error) {
+func Posts(db *sqlx.DB, postId int) (postPageData, error) {
 	const query = `
 	SELECT
 		title,
@@ -129,8 +142,8 @@ func Posts(db *sqlx.DB, post_id string) (postPageData, error) {
 		post_id = ?
 ` // Запрос на получение информации о посте с заданным id
 
-	var postdata postPageData                // Заранее объявляем массив с результирующей информацией
-	err := db.Get(&postdata, query, post_id) // Делаем запрос в базу данных
+	var postdata postPageData               // Заранее объявляем массив с результирующей информацией
+	err := db.Get(&postdata, query, postId) // Делаем запрос в базу данных
 	if err != nil {
 		return postdata, err
 	}
