@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora&family=Oxygen&family=Roboto&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="static/css/admin.css">
+    <script type="text/javascript" src="static/js/admin.js"></script>
+    <title>Admin</title>
+</head>
+
+<body>
+    <header class="header">
+        <span class="header__logo">Escape.<span class="header__text">author</span></span>
+        <nav class="header__menu">
+            <span class="header__avatar"></span>
+            <button class="header__button"></button>
+        </nav>
+    </header>
+    <form class="form" method="post" enctype="multipart/form-data">
+        <h1 class="form__title">New Post</h1>
+        <button class="form__button" type="submit">Publish</button>
+        <p class="form__text">Fill out the form bellow and publish your article</p>
+        <div class="form-alert no-show">
+            <span class="form-alert__icon"></span>
+            <p class="form-alert_text status-text">Whoops! Some fields need your attention</p>
+        </div>
+        <div class="form-complete no-show">
+            <span class="form-complete__icon"></span>
+            <p class="form-complete_text status-text">Publish Complete!</p>
+        </div>
+        <div class="form-content">
+            <h3 class="form-content__title">Main Information</h3>
+            <div class="form-post">
+                <label class="form-post__lable">Title</label>
+                <input class="form-post__input input_margin" name="title">
+                <p class="form-post__alert no-show">Title is required.</p>
+                <label class="form-post__lable">Short description</label>
+                <input class="form-post__input input_margin" name="description"
+                    placeholder="Please, enter any description">
+                <p class="form-post__alert no-show">Short description is required.</p>
+                <label class="form-post__lable">Author name</label>
+                <input class="form-post__input input_margin" name="author">
+                <p class="form-post__alert no-show">Author name is required.</p>
+                <label class="form-post__lable">Author Photo</label>
+                <div class="form-post__avatar">
+                    <div class="form-post__avatar-lable lable-border">
+                        <img src="" class="form-post__avatar-image" />
+                        <span class="form-post__icon icon_avatar"></span>
+                    </div>
+                    <label class="form-post__avatar-update" for="upload">
+                        <input class="form-post__input-button" multiple name="avatar" type="file" id="upload"
+                            accept=".jpg, .jpeg, .png, .svg" hidden />
+                        <span class="form-post__button button_avatar_upload">Upload</span>
+                        <span class="form-post__button button_avatar_update no-show">Upload New</span>
+                    </label>
+                    <span class="form-post__icon icon-update no-show"></span>
+                    <span class="form-post__icon-delete no-show"></span>
+                    <button class="form-post__button button_avatar_remove no-show" type="button">Remove</button>
+                </div>
+                <label class="form-post__lable">Publish Date</label>
+                <input class="form-post__input input_margin" type="date" name="date">
+                <p class="form-post__alert no-show">Publish Date name is required.</p>
+                <label class="form-post__lable">Hero Image</label>
+                <div class="form-post__box-lable lable-border" for="upload">
+                    <img src="" class="form-post__box-pic no-show" />
+                    <span class="form-post__box-icon"></span>
+                    <label class="form-post__box-input-lable">
+                        <input class="form-post__box-input" type="file" name="box-img" accept=".jpg, .jpeg, .png, .gif"
+                            hidden />
+                        <span class="form-post__button button_box">Upload</span>
+                    </label>
+                </div>
+                <p class="form-post__text box_text">Size up to 10mb. Format: png, jpeg, gif.</p>
+                <div class="form-post__box-button flex_no_show">
+                    <span class="form-post__box-icon"></span>
+                    <label class="form-post__box-input-lable">
+                        <input class="form-post__box-input" type="file" name="box-img" accept=".jpg, .jpeg, .png, .gif"
+                            hidden />
+                        <span class="form-post__button button_box_upload" type="button">Upload New</span>
+                    </label>
+                    <span class="form-post__icon-delete icon_box"></span>
+                    <button class="form-post__button button_box_delete" type="button">Remove</button>
+                </div>
+                <label class="form-post__lable">Hero Image</label>
+                <div class="form-post__card-lable lable-border">
+                    <img src="" class="form-post__card-img no-show" />
+                    <span class="form-post__card-icon"></span>
+                    <label class="form-post__box-input-lable">
+                        <input class="form-post__card-input" name="img-card" type="file" id="upload"
+                            accept=".jpg, .jpeg, .png, .gif" hidden />
+                        <span class="form-post__button button_card" type="button">Upload</span>
+                    </label>
+                </div>
+                <p class="form-post__text card_text">Size up to 5mb. Format: png, jpeg, gif.</p>
+                <div class="form-post__card-button no-show">
+                    <span class="form-post__box-icon"></span>
+                    <label class="form-post__box-input-lable">
+                        <input class="form-post__card-input" name="img-card" type="file" id="upload"
+                            accept=".jpg, .jpeg, .png, .gif" hidden />
+                        <span class="form-post__button button_card_upload" type="button">Upload New</span>
+                    </label>
+                    <span class="form-post__icon-delete icon_box"></span>
+                    <button class="form-post__button button_card_delete" type="button">Remove</button>
+                </div>
+            </div>
+            <div class="form-preview">
+                <p class="form-preview__text">Article preview</p>
+                <div class="form-preview__box">
+                    <div class="form-preview__box-inner">
+                        <div class="form-preview__header">
+                            <span class="form-preview__eclipse"></span>
+                            <span class="form-preview__eclipse"></span>
+                            <span class="form-preview__eclipse"></span>
+                        </div>
+                        <h3 class="form-preview__box-title text_title">New Post</h3>
+                        <p class="form-preview__box-description text_description">Please, enter any description</p>
+                        <span class="form-preview__pic"></span>
+                    </div>
+                </div>
+                <p class="form-preview__text">Post card preview</p>
+                <div class="form-preview__card">
+                    <div class="form-preview__card-inner">
+                        <span class="form-preview__img"></span>
+                        <h4 class="form-preview__card-title text_title">New Post</h4>
+                        <p class="form-preview__card-description text_description">Please, enter any description</p>
+                        <div class="form-preview__autor">
+                            <span class="form-preview__avatar preview_avatar_background"></span>
+                            <span class="form-preview__name">Enter author name</span>
+                            <span class="form-preview__date">4/19/2023</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-text">
+            <h2 class="form-text__title">Content</h2>
+            <label class="form-text__lable">Post content (plain text)</label>
+            <textarea class="form-text__textarea" name="message" placeholder="Type anything you want ..."></textarea>
+            <p class="form-post__alert no-show">Content is required.</p>
+        </div>
+    </form>
+</body>
+
+</html>

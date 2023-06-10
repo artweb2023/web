@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora&family=Oxygen&family=Roboto&display=swap" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="static/css/style.css">
+  <link rel="stylesheet" type="text/css" href="static/css/home.css">
+  <script type="text/javascript" src="static/js/home.js"></script>
   <title>Travell Blog</title>
 </head>
 
@@ -21,6 +22,7 @@
       <a class="nav-bar__link" href="#">About</a>
       <a class="nav-bar__link" href="#">Contact</a>
     </nav>
+    <span class="nav-bar__icon"></span>
     <h1 class="header__title">Let's do it together.</h1>
     <p class="header__text">We travel the world in search of stories. Come along for the ride.</p>
     <button class="header-button-view__posts">View Latest Posts</button>
@@ -37,8 +39,8 @@
     <section class="main-featured">
       <h2 class="main-featured__title">Featured Posts</h2>
       {{ range .FeaturedPost }}
-      <a class="post-box" href="./post/{{ .PostId }}"
-        style="background: #000000 url('{{ .PostImg }}') no-repeat; border-radius: 3px;">
+      <a class="post-box" href="{{ .PostUrl }}"
+        style="background: #000000 url('{{ .PostImg }}') no-repeat; border-radius: 3px;background-size: 100% 100%;background-position: center;">
         {{if .PostTag }}<span class="post-box__tags">{{ .PostTag }}</span>{{end}}
         <h4 class="post-box__title">{{ .Title }}</h4>
         <p class="post-box__text">{{ .Subtitle }}</p>
@@ -53,7 +55,7 @@
     <section class="main-recent">
       <h2 class="main-recent__title">Most Recent</h2>
       {{ range .RecentPost }}
-      <a class="post-card" href="./post/{{ .PostId }}">
+      <a class="post-card" href="{{ .PostUrl }}">
         <img class="post-card__img" src="{{ .PostImg }}" alt="air balloon">
         <h3 class="post-card__title">{{ .Title }}</h3>
         <p class="post-card__text">{{ .Subtitle }}</p>

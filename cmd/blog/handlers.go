@@ -2,17 +2,23 @@ package main
 
 import (
 	"database/sql"
+	"encoding/base64"
+	"encoding/json"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 )
 
 type featuredPostData struct {
+	PostUrl     string
 	PostId      string `db:"post_id"`
 	Title       string `db:"title"`
 	Subtitle    string `db:"subtitle"`
@@ -24,6 +30,7 @@ type featuredPostData struct {
 }
 
 type recentPostData struct {
+	PostUrl     string
 	PostId      string `db:"post_id"`
 	Title       string `db:"title"`
 	Subtitle    string `db:"subtitle"`
@@ -35,8 +42,8 @@ type recentPostData struct {
 }
 
 type indexPageData struct {
-	FeaturedPost []featuredPostData
-	RecentPost   []recentPostData
+	FeaturedPost []*featuredPostData
+	RecentPost   []*recentPostData
 }
 
 type postPageData struct {
@@ -45,6 +52,16 @@ type postPageData struct {
 	PostText string `db:"post_text"`
 	PostImg  string `db:"image_url"`
 	Text     []string
+}
+
+type createPostRequest struct {
+	Title       string   `json:"title"`
+	Subtitle    string   `json:"description"`
+	Author      string   `json:"name"`
+	AuthorImg   string   `json:"avatar"`
+	PublishDate string   `json:"date"`
+	PostImage   string   `json:"boxImage"`
+	PostText    []string `json:"content"`
 }
 
 func index(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
@@ -91,8 +108,6 @@ func post(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 		postId, err := strconv.Atoi(postIdStr) // Конвертируем строку orderID в число
 		if err != nil {
 			if err == sql.ErrNoRows {
-				// sql.ErrNoRows возвращается, когда в запросе к базе не было ничего найдено
-				// В таком случае мы возвращем 404 (not found) и пишем в тело, что ордер не найден
 				http.Error(w, "Post not found", 404)
 				log.Println(err)
 				return
@@ -129,6 +144,159 @@ func post(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func login(w http.ResponseWriter, r *http.Request) {
+	ts, err := template.ParseFiles("pages/login.html")
+	if err != nil {
+		http.Error(w, "Internal Server Error", 500)
+		log.Println(err.Error())
+		return
+	}
+
+	err = ts.Execute(w, nil)
+	if err != nil {
+		http.Error(w, "Internal Server Error", 500)
+		log.Println(err.Error())
+		return
+	}
+}
+
+func admin(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ts, err := template.ParseFiles("pages/admin.html")
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		err = ts.Execute(w, nil)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+		log.Println("Request completed successfully")
+	}
+}
+
+func createPost(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reqData, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		var req createPostRequest
+
+		err = json.Unmarshal(reqData, &req)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		authorImg, err := base64.StdEncoding.DecodeString(req.AuthorImg)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		postImg, err := base64.StdEncoding.DecodeString(req.PostImage)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		authorFileName := uuid.New().String() + ".jpg" // Генерация названия файла для аватара автора
+		authorFilePath := "static/img/" + authorFileName
+
+		authorFile, err := os.Create(authorFilePath)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		defer authorFile.Close()
+
+		_, err = authorFile.Write(authorImg)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		postFileName := uuid.New().String() + ".jpg" // Генерация названия файла для изображения поста
+		postFilePath := "static/img/" + postFileName
+		postFileUrl := "/" + postFilePath
+
+		postFile, err := os.Create(postFilePath)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		defer postFile.Close()
+
+		_, err = postFile.Write(postImg)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		err = savePost(db, req, authorFilePath, postFileUrl)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func savePost(db *sqlx.DB, req createPostRequest, authorURL, postImageURL string) error {
+	const query = `
+		INSERT INTO
+			post
+		(
+			title,
+			subtitle,
+			author,
+			author_url,
+			publish_date,
+			image_url,
+			post_text,
+			category,
+			featured
+		)
+		VALUES
+		(
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?
+		)
+	`
+
+	postText := strings.Join(req.PostText, "\n\n")
+
+	_, err := db.Exec(query, req.Title, req.Subtitle, req.Author, authorURL, req.PublishDate, postImageURL, postText, 0, 0)
+	return err
+}
+
 func Posts(db *sqlx.DB, postId int) (postPageData, error) {
 	const query = `
 	SELECT
@@ -151,7 +319,7 @@ func Posts(db *sqlx.DB, postId int) (postPageData, error) {
 	return postdata, nil
 }
 
-func featuredPosts(db *sqlx.DB) ([]featuredPostData, error) {
+func featuredPosts(db *sqlx.DB) ([]*featuredPostData, error) {
 	const query = `
 		SELECT
 		    post_id,
@@ -167,17 +335,21 @@ func featuredPosts(db *sqlx.DB) ([]featuredPostData, error) {
 		WHERE featured = 1
 	` // Составляем SQL-запрос для получения записей для секции featured-posts
 
-	var featuredposts []featuredPostData // Заранее объявляем массив с результирующей информацией
+	var featuredposts []*featuredPostData // Заранее объявляем массив с результирующей информацией
 
 	err := db.Select(&featuredposts, query) // Делаем запрос в базу данных
 	if err != nil {                         // Проверяем, что запрос в базу данных не завершился с ошибкой
 		return nil, err
 	}
 
+	for _, fpost := range featuredposts {
+		fpost.PostUrl = "/post/" + fpost.PostId // Формируем исходя из ID поста в базе
+	}
+
 	return featuredposts, nil
 }
 
-func recentPost(db *sqlx.DB) ([]recentPostData, error) {
+func recentPost(db *sqlx.DB) ([]*recentPostData, error) {
 	const query = `
 		SELECT
 			post_id,
@@ -193,11 +365,15 @@ func recentPost(db *sqlx.DB) ([]recentPostData, error) {
 		WHERE featured = 0
 	` // Составляем SQL-запрос для получения записей для секции featured-posts
 
-	var recentpost []recentPostData // Заранее объявляем массив с результирующей информацией
+	var recentpost []*recentPostData // Заранее объявляем массив с результирующей информацией
 
 	err := db.Select(&recentpost, query) // Делаем запрос в базу данных
 	if err != nil {                      // Проверяем, что запрос в базу данных не завершился с ошибкой
 		return nil, err
+	}
+
+	for _, rpost := range recentpost {
+		rpost.PostUrl = "/post/" + rpost.PostId // Формируем исходя из ID поста в базе
 	}
 
 	return recentpost, nil

@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora&family=Oxygen&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="/static/css/style1.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/post.css">
+  <script type="text/javascript" src="/static/js/home.js"></script>
   <title>Travell Blog</title>
 </head>
 
@@ -17,16 +18,17 @@
   <header class="header">
     <span class="header__logo text">Escape.</span>
     <nav class="nav-bar">
-      <a class="nav-bar__link" href="#">Home</a>
+      <a class="nav-bar__link" href="/home">Home</a>
       <a class="nav-bar__link" href="#">Categories</a>
       <a class="nav-bar__link" href="#">About</a>
       <a class="nav-bar__link" href="#">Contact</a>
     </nav>
+    <span class="nav-bar__icon"></span>
   </header>
   <main class="main">
     <h1 class="main__title">{{ .Title }}</h1>
     <p class="main__subtext">{{ .Subtitle }}</p>
-    <img class="main__image" src="{{ .PostImg }}" alt="northern lights">
+    <img class="main__image" src="{{ .PostImg }}">
     <div class="main-content">
       {{ range .Text}}
       <p class="main-content__text">{{ . }}</p>
