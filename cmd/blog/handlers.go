@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -11,10 +12,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+)
+
+const (
+	authCookieName = "auth"
 )
 
 type featuredPostData struct {
@@ -64,24 +70,35 @@ type createPostRequest struct {
 	PostText    []string `json:"content"`
 }
 
+type user struct {
+	UserID   int    `db:"user_id"`
+	Email    string `db:"email"`
+	Password string `db:"password"`
+}
+
+type userRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func index(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		featuredposts, err := featuredPosts(db)
 		if err != nil {
-			http.Error(w, "Internal Server Error", 500) // В случае ошибки парсинга - возвращаем 500
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError) // В случае ошибки парсинга - возвращаем 500
 			log.Println(err)
 			return // Не забываем завершить выполнение ф-ии
 		}
 		recentpost, err := recentPost(db)
 		if err != nil {
-			http.Error(w, "Internal Server Error", 500) // В случае ошибки парсинга - возвращаем 500
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError) // В случае ошибки парсинга - возвращаем 500
 			log.Println(err)
 			return // Не забываем завершить выполнение ф-ии
 		}
 
 		ts, err := template.ParseFiles("pages/index.html") // Главная страница блога
 		if err != nil {
-			http.Error(w, "Internal Server Error", 500) // В случае ошибки парсинга - возвращаем 500
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError) // В случае ошибки парсинга - возвращаем 500
 			log.Println(err)
 			return // Не забываем завершить выполнение ф-ии
 		}
@@ -93,7 +110,7 @@ func index(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 
 		err = ts.Execute(w, data) // Заставляем шаблонизатор вывести шаблон в тело ответа
 		if err != nil {
-			http.Error(w, "Internal Server Error", 500)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			log.Println(err)
 			return
 		}
@@ -113,14 +130,14 @@ func post(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			http.Error(w, "Internal Server Error", 500)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			log.Println(err)
 			return
 		}
 
 		postdata, err := Posts(db, postId)
 		if err != nil {
-			http.Error(w, "Internal Server Error", 500) // В случае ошибки парсинга - возвращаем 500
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError) // В случае ошибки парсинга - возвращаем 500
 			log.Println(err)
 			return // Не забываем завершить выполнение ф-ии
 		}
@@ -147,21 +164,39 @@ func post(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 func login(w http.ResponseWriter, r *http.Request) {
 	ts, err := template.ParseFiles("pages/login.html")
 	if err != nil {
-		http.Error(w, "Internal Server Error", 500)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Println(err.Error())
 		return
 	}
 
 	err = ts.Execute(w, nil)
 	if err != nil {
-		http.Error(w, "Internal Server Error", 500)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Println(err.Error())
 		return
+	}
+
+	log.Println("Request completed successfully")
+}
+
+func logout() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.SetCookie(w, &http.Cookie{
+			Name:    authCookieName,
+			Path:    "/",
+			Expires: time.Now().AddDate(0, 0, -1),
+		})
+		w.WriteHeader(http.StatusOK)
+		log.Println("Request completed successfully")
 	}
 }
 
 func admin(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := authByCookie(db, w, r)
+		if err != nil {
+			return
+		}
 		ts, err := template.ParseFiles("pages/admin.html")
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -181,6 +216,10 @@ func admin(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 
 func createPost(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := authByCookie(db, w, r)
+		if err != nil {
+			return
+		}
 		reqData, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -260,6 +299,82 @@ func createPost(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+func authentication(db *sqlx.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reqData, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		var req userRequest
+
+		err = json.Unmarshal(reqData, &req)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+
+		user, err := CheckUser(db, req.Email, req.Password)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "Incorrect password or email", http.StatusUnauthorized)
+				return
+			} else {
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				log.Println(err)
+				return
+			}
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:    authCookieName,              // Устанавливаем имя куки
+			Value:   fmt.Sprint(user.UserID),     // Конвертируем userID из user из типа int в string
+			Path:    "/",                         // Говорим куке действовать по всем путям сайта
+			Expires: time.Now().AddDate(0, 0, 1), // говорим куке протухнуть через день
+		})
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+	}
+}
+
+func authByCookie(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	cookie, err := r.Cookie(authCookieName)
+	if err != nil {
+		if err == http.ErrNoCookie {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			log.Println(err)
+			return err
+		}
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	userIDStr := cookie.Value
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusForbidden)
+		log.Println(err)
+		return err
+	}
+
+	_, err = userByID(db, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			log.Println(err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 func savePost(db *sqlx.DB, req createPostRequest, authorURL, postImageURL string) error {
@@ -377,4 +492,46 @@ func recentPost(db *sqlx.DB) ([]*recentPostData, error) {
 	}
 
 	return recentpost, nil
+}
+
+func CheckUser(db *sqlx.DB, email, password string) (user, error) {
+	const query = `
+	SELECT
+	    user_id,
+		email,
+		password
+	FROM
+		user
+	WHERE
+		email = ? AND password = ?
+`
+	var u user
+
+	err := db.Get(&u, query, email, password)
+	if err != nil {
+		return user{}, err
+	}
+
+	return u, nil
+}
+
+func userByID(db *sqlx.DB, userId int) (user, error) {
+	const query = `
+	SELECT
+	    user_id,
+		email,
+		password
+	FROM
+		user
+	WHERE
+	    user_id = ?
+`
+	var u user
+
+	err := db.Get(&u, query, userId)
+	if err != nil {
+		return user{}, err
+	}
+
+	return u, nil
 }

@@ -4,6 +4,7 @@ window.onload = () => {
     initializeAvatarPreview();
     initializeBoxImagePreview();
     initializeCardImagePreview();
+    initializeLogout();
 };
 
 function initializeFormValidation() {
@@ -25,7 +26,7 @@ function initializeFormValidation() {
         const ClassAlertBordet = 'alert-border';
         const ClassAlertRemove = 'hide_animation'
         const alertBlock = document.querySelector('.form-alert');
-        const alertMessage = document.querySelectorAll(".form-post__alert");
+        const alertMessage = document.querySelectorAll('.form-post__alert');
         const AvatarLable = document.querySelector('.form-post__avatar-lable');
         const BoxLable = document.querySelector('.form-post__box-lable');
         const CarLable = document.querySelector('.form-post__card-lable');
@@ -472,4 +473,14 @@ function initializeCardImagePreview() {
         cardPostLable.classList.add(LableBorder);
     }
 
+}
+
+function initializeLogout() {
+    const logoutButton = document.querySelector(".header__button")
+    logoutButton.addEventListener('click', async () => {
+        const response = await fetch('/api/logout')
+        if (response.ok) {
+            window.location.href = "/home"
+        }
+    })
 }

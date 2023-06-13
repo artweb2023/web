@@ -15,10 +15,10 @@ function viewPassword() {
 
         if (inputPasswordAttribute === "password" && formInputPasswordValue.trim() !== '') {
             formInput[1].setAttribute("type", "text");
-            passwordClick.style.background = 'url("./img/eye-off.svg")';
+            passwordClick.style.background = 'url("static/img/eye-off.svg")';
         } else {
             formInput[1].setAttribute("type", "password");
-            passwordClick.style.background = 'url("./img/eye.svg")';
+            passwordClick.style.background = 'url("static/img/eye.svg")';
         }
     }
 }
@@ -36,10 +36,11 @@ function inputFocus() {
 }
 
 function getForm() {
-    const form = document.querySelector(".content-form");
+    const form = document.querySelector(".content-form")
     form.addEventListener('submit', function (event) {
-        if (!validateForm()) {
-            event.preventDefault();
+        event.preventDefault()
+        if (validateForm()) {
+            getFormValue()
         }
     });
 
@@ -108,7 +109,7 @@ function getForm() {
             return false;
         }
 
-        else if ((!isValidEmail(FormInputEmailValue)) && (FormInputPasswordValue == "" || FormInputPasswordValue.length == 0 || FormInputPasswordValue.length == null)) {
+        if ((!isValidEmail(FormInputEmailValue)) && (FormInputPasswordValue == "" || FormInputPasswordValue.length == 0 || FormInputPasswordValue.length == null)) {
             AlertBlock.classList.remove(ClassNoShow)
             AlertMessage[0].classList.remove(ClassNoShow)
             FormInput[0].classList.add(ClassBorderAlert)
@@ -120,11 +121,11 @@ function getForm() {
             AlertBlock.classList.remove(ClassAnimationRemove)
             return false;
         }
-        else if ((!isValidEmail(FormInputEmailValue)) && !(FormInputPasswordValue == "" || FormInputPasswordValue.length == 0 || FormInputPasswordValue.length == null)) {
+
+        if ((!isValidEmail(FormInputEmailValue)) && !(FormInputPasswordValue == "" || FormInputPasswordValue.length == 0 || FormInputPasswordValue.length == null)) {
             AlertBlock.classList.remove(ClassNoShow)
             AlertMessage[0].classList.remove(ClassNoShow)
             FormInput[0].classList.add(ClassBorderAlert)
-            FormInput[1].classList.add(ClassBorderAlert)
             AlertMessage[0].classList.add(ClassShow)
             AlertText.textContent = 'Email or password is incorrect.'
             AlertMessage[0].textContent = 'Incorrect email format. Correct format is ****@**.***'
@@ -142,6 +143,48 @@ function getForm() {
             return true;
         }
     }
+
+    async function getFormValue() {
+        const ClassNoShow = 'no-show'
+        const ClassBorderAlert = 'border_alert'
+        const ClassAnimation = 'content-status_animation'
+        const ClassAnimationRemove = 'hide_animation'
+        const AlertBlock = document.querySelector(".content-status")
+        const AlertText = document.querySelector(".content-status__text")
+        const form = document.querySelector(".content-form")
+        const email = form.querySelector('[name="email"]');
+        const password = form.querySelector('[name="password"]');
+        const User = {
+            email: email.value,
+            password: password.value,
+        }
+
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(User)
+        });
+
+        if (response.status === 200) {
+            window.location.href = '/admin'
+        } else if (response.status === 401) {
+            AlertBlock.classList.remove(ClassNoShow)
+            email.classList.add(ClassBorderAlert)
+            password.classList.add(ClassBorderAlert)
+            AlertText.textContent = 'Email or password is incorrect.'
+            AlertBlock.classList.add(ClassAnimation)
+            AlertBlock.classList.remove(ClassAnimationRemove)
+        }
+        else {
+            response.text().then(data => {
+                console.log(data);
+            });
+        }
+
+    }
+
 }
 
 

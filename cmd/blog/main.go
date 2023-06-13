@@ -29,6 +29,8 @@ func main() {
 	mux.HandleFunc("/admin", admin(dbx))
 	mux.HandleFunc("/api/post", createPost(dbx)).Methods(http.MethodPost)
 	mux.HandleFunc("/login", login)
+	mux.HandleFunc("/api/login", authentication(dbx)).Methods(http.MethodPost)
+	mux.HandleFunc("/api/logout", logout())
 	fmt.Println("Start server")
 	mux.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	http.ListenAndServe(port, mux)
